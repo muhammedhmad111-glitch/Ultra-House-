@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { 
   Star, 
@@ -10,7 +10,13 @@ import {
   Minus, 
   Heart, 
   ChevronRight,
-  Check
+  Check,
+  Zap,
+  Eye,
+  Clock,
+  ShieldAlert,
+  Award,
+  Sparkles
 } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import Button from '../components/ui/Button';
@@ -20,17 +26,47 @@ import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { getAIRecommendations } from '../services/geminiService';
+
+const CountdownTimer = () => {
+  const [timeLeft, setTimeLeft] = useState({ hours: 2, minutes: 45, seconds: 30 });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        return prev;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex gap-2 items-center font-mono text-sm">
+      <div className="bg-red-50 text-red-600 px-2 py-1 rounded font-bold">{String(timeLeft.hours).padStart(2, '0')}h</div>
+      <span className="text-red-600 font-bold">:</span>
+      <div className="bg-red-50 text-red-600 px-2 py-1 rounded font-bold">{String(timeLeft.minutes).padStart(2, '0')}m</div>
+      <span className="text-red-600 font-bold">:</span>
+      <div className="bg-red-50 text-red-600 px-2 py-1 rounded font-bold">{String(timeLeft.seconds).padStart(2, '0')}s</div>
+    </div>
+  );
+};
 
 export default function ProductDetail() {
   const { id } = useParams();
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [aiRecommendations, setAiRecommendations] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState('description');
   const [isStickyVisible, setIsStickyVisible] = useState(false);
+  const [viewersCount, setViewersCount] = useState(Math.floor(Math.random() * 20) + 5);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -43,6 +79,11 @@ export default function ProductDetail() {
         const allProducts = await getProducts();
         const related = allProducts.filter(p => p.category === data.category && p.id !== data.id).slice(0, 4);
         setRelatedProducts(related);
+
+        // AI Recommendations
+        const recNames = await getAIRecommendations([data.category, data.name], allProducts);
+        const recs = allProducts.filter(p => recNames.includes(p.name) && p.id !== data.id).slice(0, 4);
+        setAiRecommendations(recs.length > 0 ? recs : related);
       }
       setLoading(false);
     };
@@ -84,6 +125,12 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
+    toast.success('Added to cart!');
+  };
+
+  const handleBuyNow = () => {
+    addToCart(product, quantity);
+    navigate('/checkout');
   };
 
   return (
@@ -103,7 +150,7 @@ export default function ProductDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 border">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 border relative group">
               <motion.img
                 key={selectedImage}
                 initial={{ opacity: 0 }}
@@ -113,6 +160,18 @@ export default function ProductDetail() {
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
+              <div className="absolute top-4 left-4 flex flex-col gap-2">
+                {product.isBestSeller && (
+                  <span className="bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+                    Best Seller
+                  </span>
+                )}
+                {product.discountPrice && (
+                  <span className="bg-red-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+                    Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
+                  </span>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 gap-4">
               {product.images.map((img, i) => (
@@ -133,98 +192,166 @@ export default function ProductDetail() {
           {/* Product Info */}
           <div className="flex flex-col">
             <div className="mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex items-center text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} />
-                  ))}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center text-yellow-400">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={16} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} />
+                    ))}
+                  </div>
+                  <span className="text-sm font-bold text-gray-900">{product.rating}</span>
+                  <span className="text-sm text-gray-500">({product.reviewsCount} reviews)</span>
                 </div>
-                <span className="text-sm font-bold text-gray-900">{product.rating}</span>
-                <span className="text-sm text-gray-500">({product.reviewsCount} reviews)</span>
+                <div className="flex items-center gap-2 text-red-600 animate-pulse">
+                  <Eye size={16} />
+                  <span className="text-xs font-bold uppercase tracking-widest">{viewersCount} people viewing</span>
+                </div>
               </div>
               
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">{product.name}</h1>
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">{product.name}</h1>
               
               <div className="flex items-center gap-4 mb-6">
                 {product.discountPrice ? (
                   <>
-                    <span className="text-3xl font-bold text-black">${product.discountPrice}</span>
+                    <span className="text-4xl font-bold text-black">${product.discountPrice}</span>
                     <span className="text-xl text-gray-400 line-through">${product.price}</span>
-                    <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded">
-                      SAVE ${product.price - product.discountPrice}
-                    </span>
+                    <div className="bg-red-50 text-red-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-red-100">
+                      Limited Time Offer
+                    </div>
                   </>
                 ) : (
-                  <span className="text-3xl font-bold text-black">${product.price}</span>
+                  <span className="text-4xl font-bold text-black">${product.price}</span>
                 )}
               </div>
 
-              <p className="text-gray-600 leading-relaxed mb-8">
+              {/* Countdown Timer */}
+              {product.discountPrice && (
+                <div className="mb-8 p-4 bg-gray-50 rounded-2xl border flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Clock size={20} className="text-red-600" />
+                    <span className="text-sm font-bold uppercase tracking-widest text-gray-600">Offer ends in:</span>
+                  </div>
+                  <CountdownTimer />
+                </div>
+              )}
+
+              <p className="text-gray-600 leading-relaxed mb-8 text-lg">
                 {product.description}
               </p>
             </div>
 
-            {/* Urgency Element */}
-            <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl mb-8 flex items-center gap-3">
-              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-              <p className="text-sm text-orange-800 font-medium">
-                Hurry! Only <span className="font-bold">{product.stock} items</span> left in stock.
+            {/* Scarcity Element */}
+            <div className="bg-red-50 border border-red-100 p-5 rounded-2xl mb-8">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-red-800 font-bold text-sm uppercase tracking-widest">
+                  <Zap size={16} fill="currentColor" />
+                  <span>Selling Fast!</span>
+                </div>
+                <span className="text-xs font-bold text-red-600">{product.stock} items left</span>
+              </div>
+              <div className="w-full h-2 bg-red-100 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(product.stock / 50) * 100}%` }}
+                  className="h-full bg-red-600"
+                />
+              </div>
+              <p className="mt-3 text-xs text-red-700 font-medium">
+                Order within <span className="font-bold">2 hours 45 minutes</span> for <span className="font-bold underline">Same Day Delivery</span> in Dubai.
               </p>
             </div>
 
             {/* Actions */}
-            <div className="space-y-6 mb-12">
+            <div className="space-y-4 mb-12">
               <div className="flex items-center gap-4">
-                <div className="flex items-center border rounded-xl p-1 bg-gray-50">
+                <div className="flex items-center border-2 rounded-xl p-1 bg-white">
                   <button 
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-2 hover:bg-white rounded-lg transition-colors"
+                    className="p-3 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     <Minus size={18} />
                   </button>
-                  <span className="w-12 text-center font-bold">{quantity}</span>
+                  <span className="w-12 text-center font-bold text-lg">{quantity}</span>
                   <button 
                     onClick={() => setQuantity(quantity + 1)}
-                    className="p-2 hover:bg-white rounded-lg transition-colors"
+                    className="p-3 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     <Plus size={18} />
                   </button>
                 </div>
                 <Button 
                   onClick={handleAddToCart}
-                  className="flex-grow py-4 text-base"
+                  className="flex-grow py-5 text-base font-bold uppercase tracking-widest shadow-xl shadow-black/10"
                 >
                   <ShoppingCart className="mr-2" size={20} />
                   Add to Cart
                 </Button>
-                <button className="p-4 border rounded-xl hover:bg-gray-50 transition-colors">
+                <button className="p-5 border-2 rounded-xl hover:bg-gray-50 transition-colors">
                   <Heart size={20} />
                 </button>
               </div>
               
-              <Button variant="outline" className="w-full py-4 border-black text-black hover:bg-black hover:text-white">
-                Buy It Now
+              <Button 
+                onClick={handleBuyNow}
+                className="w-full py-5 bg-red-600 hover:bg-red-700 text-white border-none shadow-xl shadow-red-600/20 text-base font-bold uppercase tracking-widest"
+              >
+                <Zap className="mr-2" size={20} fill="currentColor" />
+                Buy It Now — Secure Checkout
               </Button>
             </div>
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-4 py-8 border-t border-b">
-              <div className="flex flex-col items-center text-center gap-2">
-                <Truck size={20} className="text-gray-400" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Free Shipping</span>
+            <div className="grid grid-cols-3 gap-6 py-10 border-t border-b">
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="p-3 bg-gray-50 rounded-full">
+                  <Truck size={24} className="text-black" />
+                </div>
+                <div className="space-y-1">
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-black">Free Shipping</span>
+                  <span className="block text-[9px] text-gray-400 font-medium">On all orders over $500</span>
+                </div>
               </div>
-              <div className="flex flex-col items-center text-center gap-2">
-                <ShieldCheck size={20} className="text-gray-400" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Secure Payment</span>
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="p-3 bg-gray-50 rounded-full">
+                  <ShieldCheck size={24} className="text-black" />
+                </div>
+                <div className="space-y-1">
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-black">Secure Payment</span>
+                  <span className="block text-[9px] text-gray-400 font-medium">100% Encrypted Checkout</span>
+                </div>
               </div>
-              <div className="flex flex-col items-center text-center gap-2">
-                <RotateCcw size={20} className="text-gray-400" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Easy Returns</span>
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="p-3 bg-gray-50 rounded-full">
+                  <RotateCcw size={24} className="text-black" />
+                </div>
+                <div className="space-y-1">
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-black">Easy Returns</span>
+                  <span className="block text-[9px] text-gray-400 font-medium">30-Day Money Back</span>
+                </div>
               </div>
             </div>
 
-            {/* Meta Info */}
-            <div className="pt-8 space-y-2">
+            {/* Additional Trust Indicators */}
+            <div className="pt-8 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                  <Award size={16} className="text-yellow-500" />
+                  <span>Premium Quality</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                  <ShieldAlert size={16} className="text-blue-500" />
+                  <span>2 Year Warranty</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 grayscale opacity-40">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-3" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-5" />
+              </div>
+            </div>
+          </div>
+
+          {/* Meta Info */}
+            <div className="pt-8 space-y-2 border-t mt-8">
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-gray-400 font-medium">Category:</span>
                 <span className="text-gray-900 font-bold capitalize">{product.category}</span>
@@ -237,7 +364,6 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
-        </div>
 
         {/* Tabs */}
         <div className="mt-20">
@@ -348,6 +474,28 @@ export default function ProductDetail() {
             ))}
           </div>
         </div>
+
+        {/* AI Recommendations */}
+        {aiRecommendations.length > 0 && (
+          <div className="mt-20 bg-gray-50 -mx-4 md:-mx-6 px-4 md:px-6 py-20 rounded-[3rem]">
+            <div className="container mx-auto">
+              <div className="flex items-center gap-3 mb-10">
+                <div className="bg-white p-3 rounded-2xl shadow-sm">
+                  <Sparkles className="text-purple-600" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight">AI Smart Recommendations</h2>
+                  <p className="text-gray-500 text-sm mt-1">Based on your current interest in {product.name}.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {aiRecommendations.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sticky Add to Cart (Mobile & Desktop) */}

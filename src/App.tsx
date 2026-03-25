@@ -18,7 +18,13 @@ import Checkout from './pages/Checkout';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import FAQ from './pages/FAQ';
-import Admin from './pages/Admin';
+
+// Admin Pages
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminOrders from './pages/admin/Orders';
+import AdminProducts from './pages/admin/Products';
+import AdminCustomers from './pages/admin/Customers';
 
 // Mock simple pages
 const Privacy = () => <Layout><div className="container mx-auto px-4 py-20 max-w-3xl">
@@ -58,7 +64,15 @@ export default function App() {
               <Route path="/faq" element={<FAQ />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
-              <Route path="/admin" element={<Admin />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="customers" element={<AdminCustomers />} />
+                <Route path="settings" element={<div className="p-10 text-center text-gray-500">Settings page coming soon...</div>} />
+              </Route>
             </Routes>
             <Toaster position="top-center" richColors />
           </div>

@@ -34,6 +34,35 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
+export interface Customer {
+  uid: string;
+  email: string;
+  displayName?: string;
+  photoURL?: string;
+  totalOrders: number;
+  totalSpent: number;
+  lastOrderDate: string;
+  createdAt: string;
+}
+
+export interface Analytics {
+  totalRevenue: number;
+  totalOrders: number;
+  totalCustomers: number;
+  conversionRate: number;
+  bestSellingProducts: {
+    id: string;
+    name: string;
+    sales: number;
+    revenue: number;
+  }[];
+  dailyReports: {
+    date: string;
+    revenue: number;
+    orders: number;
+  }[];
+}
+
 export interface Order {
   id: string;
   userId?: string;

@@ -1,4 +1,4 @@
-import { collection, addDoc, serverTimestamp, doc, setDoc, getDocs, query, orderBy, updateDoc } from 'firebase/firestore';
+import { collection, serverTimestamp, doc, setDoc, getDocs, query, orderBy, updateDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { Order } from '../types';
 
@@ -6,15 +6,16 @@ const COLLECTION_NAME = 'orders';
 
 export const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt'>) => {
   try {
-    const orderRef = await addDoc(collection(db, COLLECTION_NAME), {
+    const orderRef = doc(collection(db, COLLECTION_NAME));
+    const id = orderRef.id;
+    
+    await setDoc(orderRef, {
       ...orderData,
+      id,
       createdAt: serverTimestamp()
     });
     
-    // Update the order with its ID
-    await setDoc(doc(db, COLLECTION_NAME, orderRef.id), { id: orderRef.id }, { merge: true });
-    
-    return orderRef.id;
+    return id;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, COLLECTION_NAME);
   }
