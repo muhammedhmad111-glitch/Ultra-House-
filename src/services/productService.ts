@@ -16,7 +16,9 @@ export const getProducts = async (category?: string) => {
     const products: Product[] = [];
     
     querySnapshot.forEach((doc) => {
-      products.push({ ...doc.data() as Product, id: doc.id });
+      const data = doc.data();
+      const createdAt = data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : data.createdAt;
+      products.push({ ...data as Product, id: doc.id, createdAt });
     });
     
     // If no products in Firestore, return sample data
@@ -37,7 +39,9 @@ export const getProductById = async (id: string) => {
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
-      return { ...docSnap.data() as Product, id: docSnap.id };
+      const data = docSnap.data();
+      const createdAt = data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : data.createdAt;
+      return { ...data as Product, id: docSnap.id, createdAt };
     } else {
       // Fallback to sample data
       return SAMPLE_PRODUCTS.find(p => p.id === id) || null;
@@ -50,10 +54,19 @@ export const getProductById = async (id: string) => {
 
 export const addProduct = async (product: Omit<Product, 'id'>) => {
   try {
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+    const dataToSave = {
       ...product,
       createdAt: serverTimestamp(),
+    };
+    
+    // Remove undefined fields
+    Object.keys(dataToSave).forEach(key => {
+      if ((dataToSave as any)[key] === undefined) {
+        delete (dataToSave as any)[key];
+      }
     });
+
+    const docRef = await addDoc(collection(db, COLLECTION_NAME), dataToSave);
     return docRef.id;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, COLLECTION_NAME);
@@ -63,10 +76,19 @@ export const addProduct = async (product: Omit<Product, 'id'>) => {
 export const updateProduct = async (id: string, product: Partial<Product>) => {
   try {
     const docRef = doc(db, COLLECTION_NAME, id);
-    await updateDoc(docRef, {
+    const dataToUpdate = {
       ...product,
       updatedAt: serverTimestamp(),
+    };
+
+    // Remove undefined fields
+    Object.keys(dataToUpdate).forEach(key => {
+      if ((dataToUpdate as any)[key] === undefined) {
+        delete (dataToUpdate as any)[key];
+      }
     });
+
+    await updateDoc(docRef, dataToUpdate);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `${COLLECTION_NAME}/${id}`);
   }

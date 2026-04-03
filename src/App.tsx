@@ -25,6 +25,10 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminOrders from './pages/admin/Orders';
 import AdminProducts from './pages/admin/Products';
 import AdminCustomers from './pages/admin/Customers';
+import AdminSettings from './pages/admin/Settings';
+import AdminCategories from './pages/admin/Categories';
+import AdminReviews from './pages/admin/Reviews';
+import AdminBanners from './pages/admin/Banners';
 
 // Mock simple pages
 const Privacy = () => <Layout><div className="container mx-auto px-4 py-20 max-w-3xl">
@@ -70,8 +74,11 @@ export default function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="products" element={<AdminProducts />} />
+                <Route path="categories" element={<AdminCategories />} />
+                <Route path="banners" element={<AdminBanners />} />
                 <Route path="customers" element={<AdminCustomers />} />
-                <Route path="settings" element={<div className="p-10 text-center text-gray-500">Settings page coming soon...</div>} />
+                <Route path="reviews" element={<AdminReviews />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
             </Routes>
             <Toaster position="top-center" richColors />

@@ -30,7 +30,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         
         if (userDoc.exists()) {
-          setUser(userDoc.data() as User);
+          const data = userDoc.data();
+          const createdAt = data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : data.createdAt;
+          setUser({ ...data as User, createdAt });
         } else {
           // Create new user in Firestore
           const newUser: User = {
@@ -74,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin' || user?.email === 'muhammedhmad111@gmail.com';
 
   return (
     <AuthContext.Provider value={{ user, loading, signInWithGoogle, logout, isAdmin }}>

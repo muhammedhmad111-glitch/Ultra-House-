@@ -21,6 +21,72 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  // Single Order Notification Endpoint
+  app.post("/api/orders/notify", async (req, res) => {
+    try {
+      const { order } = req.body;
+      
+      if (!order) {
+        return res.status(400).json({ error: "Order data is required" });
+      }
+
+      console.log(`New Order Received: ${order.id}`);
+
+      // 1. Log to Google Sheets if configured
+      if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY && process.env.GOOGLE_SHEET_ID) {
+        try {
+          const auth = new google.auth.JWT({
+            email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+            key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            scopes: ['https://www.googleapis.com/auth/spreadsheets']
+          });
+
+          const sheets = google.sheets({ version: 'v4', auth });
+          const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+
+          const orderRow = [
+            order.id,
+            new Date().toISOString(),
+            order.shippingAddress.fullName,
+            order.shippingAddress.email,
+            order.shippingAddress.phone,
+            order.total,
+            order.status,
+            order.paymentMethod,
+            order.items.map((item: any) => `${item.name} (x${item.quantity})`).join(', ')
+          ];
+
+          await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Orders!A:I',
+            valueInputOption: 'RAW',
+            requestBody: { values: [orderRow] },
+          });
+          
+          console.log(`Order ${order.id} appended to Google Sheets`);
+        } catch (sheetError) {
+          console.error("Google Sheets Logging Error:", sheetError);
+          // Don't fail the whole request if sheets fail
+        }
+      }
+
+      // 2. Email Notification (Mock or Real Service)
+      // In a real app, you'd use SendGrid, Mailgun, or Nodemailer here.
+      // For now, we'll log it to the server console.
+      console.log("--- EMAIL NOTIFICATION ---");
+      console.log(`To: ${process.env.ADMIN_EMAIL || 'admin@example.com'}`);
+      console.log(`Subject: New Order #${order.id}`);
+      console.log(`Customer: ${order.shippingAddress.fullName}`);
+      console.log(`Total: $${order.total}`);
+      console.log("---------------------------");
+
+      res.json({ success: true, message: "Order notification processed" });
+    } catch (error: any) {
+      console.error("Order Notification Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Google Sheets Sync Endpoint
   app.post("/api/admin/sync-sheets", async (req, res) => {
     try {

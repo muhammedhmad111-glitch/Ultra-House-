@@ -55,6 +55,17 @@ service cloud.firestore {
     //   - comment: string (required)
     //   - createdAt: timestamp (required)
     //
+    // Collection: banners
+    // Document ID: bannerId
+    // Fields:
+    //   - id: string (required)
+    //   - title: string (required)
+    //   - subtitle: string (optional)
+    //   - image: string (required)
+    //   - link: string (optional)
+    //   - buttonText: string (optional)
+    //   - isActive: bool (required)
+    //
     // ===============================================================
 
     // ===============================================================
@@ -128,6 +139,13 @@ service cloud.firestore {
              data.createdAt is timestamp;
     }
 
+    function isValidBanner(data) {
+      return data.keys().hasAll(['id', 'title', 'image', 'isActive']) &&
+             data.title is string && data.title.size() > 0 &&
+             data.image is string &&
+             data.isActive is bool;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -149,9 +167,34 @@ service cloud.firestore {
       }
     }
 
+    // Collection Group for reviews
+    match /{path=**}/reviews/{reviewId} {
+      allow read: if true;
+      allow delete: if isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidBanner(request.resource.data);
+    }
+
     match /orders/{orderId} {
       allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
-      allow create: if isAuthenticated() && isValidOrder(request.resource.data) && (request.resource.data.userId == request.auth.uid || !('userId' in request.resource.data));
+      allow create: if isValidOrder(request.resource.data) && 
+                    (
+                      (isAuthenticated() && request.resource.data.userId == request.auth.uid) || 
+                      (!('userId' in request.resource.data))
+                    );
       allow update: if isAdmin() && isValidOrder(request.resource.data);
     }
 

@@ -13,7 +13,9 @@ import {
   Sparkles,
   Bell,
   Search,
-  Globe
+  Globe,
+  Plus,
+  Layout
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../lib/utils';
@@ -36,7 +38,10 @@ export default function AdminLayout() {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
     { name: 'Orders', icon: ShoppingBag, path: '/admin/orders' },
     { name: 'Products', icon: Package, path: '/admin/products' },
+    { name: 'Categories', icon: Sparkles, path: '/admin/categories' },
+    { name: 'Banners', icon: Layout, path: '/admin/banners' },
     { name: 'Customers', icon: Users, path: '/admin/customers' },
+    { name: 'Reviews', icon: Bell, path: '/admin/reviews' },
     { name: 'Settings', icon: Settings, path: '/admin/settings' },
   ];
 
@@ -125,6 +130,13 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-4">
+            <Link 
+              to="/admin/products" 
+              className="hidden sm:flex items-center gap-2 bg-black text-white px-4 py-2 rounded-2xl text-xs font-bold hover:bg-gray-800 transition-all shadow-lg shadow-black/10"
+            >
+              <Plus size={16} />
+              ADD PRODUCT
+            </Link>
             <button className="p-2 hover:bg-gray-100 rounded-xl relative text-gray-500">
               <Bell size={20} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />

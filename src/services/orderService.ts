@@ -9,11 +9,32 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'createdAt'>) =>
     const orderRef = doc(collection(db, COLLECTION_NAME));
     const id = orderRef.id;
     
-    await setDoc(orderRef, {
+    // Remove undefined fields to prevent Firestore errors (e.g., userId for guest checkouts)
+    const dataToSave = {
       ...orderData,
       id,
       createdAt: serverTimestamp()
+    };
+    
+    Object.keys(dataToSave).forEach(key => {
+      if ((dataToSave as any)[key] === undefined) {
+        delete (dataToSave as any)[key];
+      }
     });
+    
+    await setDoc(orderRef, dataToSave);
+    
+    // 3. Notify Backend (Email/Google Sheets)
+    try {
+      await fetch('/api/orders/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order: dataToSave })
+      });
+    } catch (notifyError) {
+      console.error('Failed to send order notification:', notifyError);
+      // Don't fail the order if notification fails
+    }
     
     return id;
   } catch (error) {
@@ -28,7 +49,10 @@ export const getOrders = async () => {
     const orders: Order[] = [];
     
     querySnapshot.forEach((doc) => {
-      orders.push({ ...doc.data() as Order, id: doc.id });
+      const data = doc.data();
+      // Convert Firebase Timestamp to ISO string if it exists
+      const createdAt = data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : data.createdAt;
+      orders.push({ ...data as Order, id: doc.id, createdAt });
     });
     
     return orders;

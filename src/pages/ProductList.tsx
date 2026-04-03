@@ -6,13 +6,15 @@ import ProductCard from '../components/ui/ProductCard';
 import Button from '../components/ui/Button';
 import { CATEGORIES } from '../data/sampleData';
 import { getProducts } from '../services/productService';
-import { Product } from '../types';
+import { getCategories } from '../services/categoryService';
+import { Product, Category } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -20,13 +22,22 @@ export default function ProductList() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      const data = await getProducts();
-      setProducts(data);
-      setLoading(false);
+      try {
+        const [productData, categoryData] = await Promise.all([
+          getProducts(),
+          getCategories()
+        ]);
+        setProducts(productData);
+        setCategories(categoryData);
+      } catch (error) {
+        console.error("Error fetching product list data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchProducts();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -73,7 +84,7 @@ export default function ProductList() {
         <div className="container mx-auto px-4 md:px-6">
           <h1 className="text-4xl font-bold tracking-tight mb-4">
             {categoryParam 
-              ? CATEGORIES.find(c => c.slug === categoryParam)?.name 
+              ? categories.find(c => c.slug === categoryParam)?.name || 'Category'
               : 'All Products'}
           </h1>
           <p className="text-gray-500 max-w-xl">
@@ -96,7 +107,7 @@ export default function ProductList() {
                   >
                     All Products
                   </button>
-                  {CATEGORIES.map((cat) => (
+                  {categories.map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => handleCategoryChange(cat.slug)}
@@ -230,7 +241,7 @@ export default function ProductList() {
                     >
                       All Products
                     </button>
-                    {CATEGORIES.map((cat) => (
+                    {categories.map((cat) => (
                       <button
                         key={cat.id}
                         onClick={() => { handleCategoryChange(cat.slug); setIsFilterOpen(false); }}

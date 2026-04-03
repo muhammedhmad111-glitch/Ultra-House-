@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Search, Menu, X, Phone, Globe, User as UserIcon, LogOut, Settings } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, Phone, Globe, User as UserIcon, LogOut, Settings, LayoutDashboard, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -87,6 +87,17 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-4">
+            {/* Admin Quick Access */}
+            {isAdmin && (
+              <Link 
+                to="/admin" 
+                className="hidden lg:flex items-center gap-2 bg-black text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-gray-800 transition-all shadow-lg shadow-black/10"
+              >
+                <LayoutDashboard size={14} />
+                MANAGE STORE
+              </Link>
+            )}
+
             <button 
               onClick={() => setIsSearchOpen(true)}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors hidden sm:block"
@@ -137,17 +148,26 @@ export default function Header() {
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
                     {isAdmin && (
-                      <Link 
-                        to="/admin" 
-                        className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
-                      >
-                        <Settings size={16} />
-                        Admin Dashboard
-                      </Link>
+                      <>
+                        <Link 
+                          to="/admin" 
+                          className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                        >
+                          <LayoutDashboard size={16} />
+                          Admin Dashboard
+                        </Link>
+                        <Link 
+                          to="/admin/products" 
+                          className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                        >
+                          <Plus size={16} />
+                          Add Product
+                        </Link>
+                      </>
                     )}
                     <button 
                       onClick={logout}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors mt-1"
                     >
                       <LogOut size={16} />
                       Logout

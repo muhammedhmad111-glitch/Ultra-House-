@@ -84,8 +84,19 @@ export interface Order {
 export interface Review {
   id: string;
   productId: string;
+  userId: string;
   userName: string;
   rating: number;
   comment: string;
   createdAt: string;
+}
+
+export interface Banner {
+  id: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  link: string;
+  buttonText: string;
+  isActive: boolean;
 }

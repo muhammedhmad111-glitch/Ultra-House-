@@ -6,27 +6,59 @@ import ProductCard from '../components/ui/ProductCard';
 import Button from '../components/ui/Button';
 import { CATEGORIES } from '../data/sampleData';
 import { getProducts, seedProducts } from '../services/productService';
-import { Product } from '../types';
+import { getCategories, seedCategories } from '../services/categoryService';
+import { getBanners, seedBanners } from '../services/bannerService';
+import { Product, Category, Banner } from '../types';
 import { motion } from 'framer-motion';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      const data = await getProducts();
-      setProducts(data);
-      setLoading(false);
-      
-      // Seed the database if it's the first time (optional, for demo)
-      if (data.length === 0) {
-        await seedProducts();
-        const seededData = await getProducts();
-        setProducts(seededData);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [productData, categoryData, bannerData] = await Promise.all([
+          getProducts(),
+          getCategories(),
+          getBanners(true) // Only active banners
+        ]);
+        
+        let finalProducts = productData;
+        let finalCategories = categoryData;
+        let finalBanners = bannerData;
+
+        // Seed products if empty
+        if (productData.length === 0) {
+          await seedProducts();
+          finalProducts = await getProducts();
+        }
+
+        // Seed categories if empty
+        if (categoryData.length === 0) {
+          await seedCategories();
+          finalCategories = await getCategories();
+        }
+
+        // Seed banners if empty
+        if (bannerData.length === 0) {
+          await seedBanners();
+          finalBanners = await getBanners(true);
+        }
+
+        setProducts(finalProducts);
+        setCategories(finalCategories);
+        setBanners(finalBanners);
+      } catch (error) {
+        console.error("Error fetching home data:", error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchProducts();
+    fetchData();
   }, []);
 
   const featuredProducts = products.filter(p => p.isFeatured);
@@ -38,7 +70,7 @@ export default function Home() {
       <section className="relative h-[85vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop"
+            src={banners[0]?.image || "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop"}
             alt="Hero Background"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
@@ -57,15 +89,15 @@ export default function Home() {
               New Collection 2026
             </span>
             <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6 leading-[1.1]">
-              Elevate Your Home <br /> With Premium Style
+              {banners[0]?.title || "Elevate Your Home With Premium Style"}
             </h1>
             <p className="text-lg md:text-xl text-gray-100 mb-8 max-w-lg leading-relaxed">
-              Discover our curated collection of minimalist furniture and decor designed to bring comfort and elegance to your space.
+              {banners[0]?.subtitle || "Discover our curated collection of minimalist furniture and decor designed to bring comfort and elegance to your space."}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/products">
+              <Link to={banners[0]?.link || "/products"}>
                 <Button size="lg" className="w-full sm:w-auto">
-                  Shop Collection
+                  {banners[0]?.buttonText || "Shop Collection"}
                   <ArrowRight className="ml-2" size={18} />
                 </Button>
               </Link>
@@ -137,7 +169,7 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {CATEGORIES.map((category) => (
+            {categories.map((category) => (
               <Link 
                 key={category.id} 
                 to={`/products?category=${category.slug}`}
