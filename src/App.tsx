@@ -30,6 +30,15 @@ import AdminCategories from './pages/admin/Categories';
 import AdminReviews from './pages/admin/Reviews';
 import AdminBanners from './pages/admin/Banners';
 import AdminHomepage from './pages/admin/Homepage';
+import AdminDiscounts from './pages/admin/Discounts';
+import AdminContent from './pages/admin/Content';
+import AdminLiveView from './pages/admin/LiveView';
+import AdminAnalytics from './pages/admin/Analytics';
+import AdminReports from './pages/admin/Reports';
+import AdminApps from './pages/admin/Apps';
+import AdminMarkets from './pages/admin/Markets';
+import AdminMetaSalesChannel from './pages/admin/MetaSalesChannel';
+import PlaceholderPage from './pages/admin/PlaceholderPage';
 
 // Mock simple pages
 const Privacy = () => <Layout><div className="container mx-auto px-4 py-20 max-w-3xl">
@@ -81,6 +90,14 @@ export default function App() {
                 <Route path="customers" element={<AdminCustomers />} />
                 <Route path="reviews" element={<AdminReviews />} />
                 <Route path="settings" element={<AdminSettings />} />
+                <Route path="discounts" element={<AdminDiscounts />} />
+                <Route path="content" element={<AdminContent />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="reports" element={<AdminReports />} />
+                <Route path="live-view" element={<AdminLiveView />} />
+                <Route path="markets" element={<AdminMarkets />} />
+                <Route path="apps" element={<AdminApps />} />
+                <Route path="sales-channels/meta" element={<AdminMetaSalesChannel />} />
               </Route>
             </Routes>
             <Toaster position="top-center" richColors />

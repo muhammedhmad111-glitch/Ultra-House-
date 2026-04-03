@@ -122,3 +122,17 @@ export interface HomepageSettings {
   testimonialsTitle?: string;
   showNewsletter?: boolean;
 }
+
+export interface Discount {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  minPurchase?: number;
+  startDate: string;
+  endDate?: string;
+  usageLimit?: number;
+  usageCount: number;
+  isActive: boolean;
+  createdAt: string;
+}
