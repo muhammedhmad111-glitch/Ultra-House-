@@ -25,6 +25,7 @@ import { createOrder } from '../services/orderService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
+import { analyticsService } from '../services/analyticsService';
 
 const checkoutSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -73,7 +74,17 @@ export default function Checkout() {
       setValue('email', user.email);
       setValue('fullName', user.displayName || '');
     }
-  }, [user, setValue]);
+    
+    if (cart.length > 0) {
+      analyticsService.trackEvent('InitiateCheckout', {
+        content_ids: cart.map(item => item.id),
+        content_type: 'product',
+        value: cartTotal,
+        currency: 'USD',
+        num_items: cart.length
+      });
+    }
+  }, [user, setValue, cart, cartTotal]);
 
   const paymentMethod = watch('paymentMethod');
   const formData = watch();
@@ -117,6 +128,14 @@ export default function Checkout() {
 
       if (orderId) {
         setIsSuccess(true);
+        analyticsService.trackEvent('Purchase', {
+          content_ids: cart.map(item => item.id),
+          content_type: 'product',
+          value: cartTotal - appliedDiscount,
+          currency: 'USD',
+          num_items: cart.length,
+          order_id: orderId
+        });
         clearCart();
         toast.success('Order placed successfully!');
       }

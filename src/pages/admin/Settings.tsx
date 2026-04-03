@@ -32,6 +32,9 @@ interface StoreSettings {
     facebook: string;
     twitter: string;
   };
+  metaPixelId?: string;
+  tiktokPixelId?: string;
+  ga4MeasurementId?: string;
 }
 
 export default function AdminSettings() {
@@ -49,7 +52,10 @@ export default function AdminSettings() {
       instagram: '',
       facebook: '',
       twitter: ''
-    }
+    },
+    metaPixelId: '',
+    tiktokPixelId: '',
+    ga4MeasurementId: ''
   });
 
   useEffect(() => {
@@ -254,6 +260,48 @@ export default function AdminSettings() {
                 value={settings.socialLinks.twitter}
                 onChange={(e) => setSettings(prev => ({ ...prev, socialLinks: { ...prev.socialLinks, twitter: e.target.value } }))}
                 className="w-full pl-12 pr-5 py-3 bg-gray-50 rounded-2xl text-sm font-medium outline-none border border-transparent focus:border-gray-200 focus:ring-2 ring-black/5 transition-all"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Integrations */}
+        <div className="bg-white rounded-[32px] border shadow-sm overflow-hidden">
+          <div className="p-6 bg-gray-50 border-b flex items-center gap-3">
+            <div className="p-2 bg-black text-white rounded-xl">
+              <RefreshCw size={18} />
+            </div>
+            <h2 className="font-bold text-sm uppercase tracking-widest">Analytics & Pixels</h2>
+          </div>
+          <div className="p-8 space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Meta Pixel ID</label>
+              <input
+                type="text"
+                placeholder="e.g. 123456789012345"
+                value={settings.metaPixelId}
+                onChange={(e) => setSettings(prev => ({ ...prev, metaPixelId: e.target.value }))}
+                className="w-full px-5 py-3 bg-gray-50 rounded-2xl text-sm font-medium outline-none border border-transparent focus:border-gray-200 focus:ring-2 ring-black/5 transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">TikTok Pixel ID</label>
+              <input
+                type="text"
+                placeholder="e.g. C1234567890ABCDE"
+                value={settings.tiktokPixelId}
+                onChange={(e) => setSettings(prev => ({ ...prev, tiktokPixelId: e.target.value }))}
+                className="w-full px-5 py-3 bg-gray-50 rounded-2xl text-sm font-medium outline-none border border-transparent focus:border-gray-200 focus:ring-2 ring-black/5 transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">GA4 Measurement ID</label>
+              <input
+                type="text"
+                placeholder="e.g. G-ABC123DEFG"
+                value={settings.ga4MeasurementId}
+                onChange={(e) => setSettings(prev => ({ ...prev, ga4MeasurementId: e.target.value }))}
+                className="w-full px-5 py-3 bg-gray-50 rounded-2xl text-sm font-medium outline-none border border-transparent focus:border-gray-200 focus:ring-2 ring-black/5 transition-all"
               />
             </div>
           </div>

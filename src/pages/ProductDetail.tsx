@@ -27,6 +27,7 @@ import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { getAIRecommendations } from '../services/geminiService';
+import { analyticsService } from '../services/analyticsService';
 
 const CountdownTimer = () => {
   const [timeLeft, setTimeLeft] = useState({ hours: 2, minutes: 45, seconds: 30 });
@@ -76,6 +77,14 @@ export default function ProductDetail() {
       setProduct(data);
       
       if (data) {
+        analyticsService.trackEvent('ViewContent', {
+          content_name: data.name,
+          content_category: data.category,
+          content_ids: [data.id],
+          content_type: 'product',
+          value: data.discountPrice || data.price,
+          currency: 'USD'
+        });
         const allProducts = await getProducts();
         const related = allProducts.filter(p => p.category === data.category && p.id !== data.id).slice(0, 4);
         setRelatedProducts(related);
@@ -125,6 +134,15 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
+    analyticsService.trackEvent('AddToCart', {
+      content_name: product.name,
+      content_category: product.category,
+      content_ids: [product.id],
+      content_type: 'product',
+      value: (product.discountPrice || product.price) * quantity,
+      currency: 'USD',
+      quantity: quantity
+    });
     toast.success('Added to cart!');
   };
 

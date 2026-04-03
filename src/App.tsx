@@ -5,6 +5,8 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import React, { useEffect } from 'react';
+import { analyticsService } from './services/analyticsService';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import Layout from './components/layout/Layout';
@@ -62,6 +64,10 @@ const Terms = () => <Layout><div className="container mx-auto px-4 py-20 max-w-3
 </div></Layout>;
 
 export default function App() {
+  useEffect(() => {
+    analyticsService.init();
+  }, []);
+
   return (
     <AuthProvider>
       <CartProvider>

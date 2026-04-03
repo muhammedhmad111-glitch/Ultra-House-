@@ -127,8 +127,8 @@ export default function AdminAnalytics() {
             <h3 className="text-xl font-bold tracking-tight">Sales Over Time</h3>
             <BarChart3 className="text-gray-400" size={20} />
           </div>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <div className="h-[300px] w-full relative">
+            <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={revenueData}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
@@ -154,27 +154,29 @@ export default function AdminAnalytics() {
             <h3 className="text-xl font-bold tracking-tight">Sales by Category</h3>
             <Filter className="text-gray-400" size={20} />
           </div>
-          <div className="h-[300px] flex items-center">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="h-[300px] flex items-center gap-4">
+            <div className="flex-grow h-full relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
             <div className="w-1/2 space-y-4">
               {categoryData.map((cat, index) => (
                 <div key={cat.name} className="flex items-center justify-between">
@@ -194,8 +196,8 @@ export default function AdminAnalytics() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="bg-white p-8 rounded-[40px] border shadow-sm lg:col-span-2">
           <h3 className="text-xl font-bold tracking-tight mb-8">Traffic Sources</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <div className="h-[300px] w-full relative">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={trafficData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#999'}} />

@@ -120,6 +120,8 @@ export default function AdminMetaSalesChannel() {
             <h3 className="text-2xl font-bold mb-4">Meta Marketing</h3>
             <p className="text-gray-400 text-sm leading-relaxed mb-8">
               Run automated ads, track conversions with the Meta Pixel, and engage with customers through Messenger and Instagram Direct.
+              <br /><br />
+              <span className="text-white font-bold italic">Tip: Configure your Meta Pixel ID in Store Settings to track conversions.</span>
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">

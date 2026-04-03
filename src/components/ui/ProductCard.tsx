@@ -5,6 +5,7 @@ import { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
 import { cn } from '../../lib/utils';
 import { motion } from 'framer-motion';
+import { analyticsService } from '../../services/analyticsService';
 
 interface ProductCardProps {
   product: Product;
@@ -22,6 +23,15 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product);
+    analyticsService.trackEvent('AddToCart', {
+      content_name: product.name,
+      content_category: product.category,
+      content_ids: [product.id],
+      content_type: 'product',
+      value: product.discountPrice || product.price,
+      currency: 'USD',
+      quantity: 1
+    });
     navigate('/checkout');
   };
 
@@ -83,6 +93,15 @@ export default function ProductCard({ product }: ProductCardProps) {
             onClick={(e) => {
               e.preventDefault();
               addToCart(product);
+              analyticsService.trackEvent('AddToCart', {
+                content_name: product.name,
+                content_category: product.category,
+                content_ids: [product.id],
+                content_type: 'product',
+                value: product.discountPrice || product.price,
+                currency: 'USD',
+                quantity: 1
+              });
             }}
             className="bg-black text-white py-3 font-bold text-xs uppercase tracking-widest hover:bg-gray-900 transition-colors flex items-center justify-center gap-2"
           >
