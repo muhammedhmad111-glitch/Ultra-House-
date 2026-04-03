@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Gift, ArrowRight } from 'lucide-react';
 import Button from './Button';
+import { toast } from 'sonner';
 
 export default function ExitIntent() {
   const [isVisible, setIsVisible] = useState(false);
@@ -28,7 +29,10 @@ export default function ExitIntent() {
     e.preventDefault();
     // In a real app, you'd save this to a newsletter list
     setIsVisible(false);
-    alert('Thank you! Your 10% discount code is: ULTRA10');
+    toast.success('Thank you! Your 10% discount code is: ULTRA10', {
+      duration: 10000,
+      description: 'Use this code at checkout to save 10% on your first order.',
+    });
   };
 
   return (

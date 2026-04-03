@@ -29,6 +29,7 @@ import AdminSettings from './pages/admin/Settings';
 import AdminCategories from './pages/admin/Categories';
 import AdminReviews from './pages/admin/Reviews';
 import AdminBanners from './pages/admin/Banners';
+import AdminHomepage from './pages/admin/Homepage';
 
 // Mock simple pages
 const Privacy = () => <Layout><div className="container mx-auto px-4 py-20 max-w-3xl">
@@ -75,6 +76,7 @@ export default function App() {
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="categories" element={<AdminCategories />} />
+                <Route path="homepage" element={<AdminHomepage />} />
                 <Route path="banners" element={<AdminBanners />} />
                 <Route path="customers" element={<AdminCustomers />} />
                 <Route path="reviews" element={<AdminReviews />} />

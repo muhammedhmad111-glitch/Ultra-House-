@@ -99,4 +99,26 @@ export interface Banner {
   link: string;
   buttonText: string;
   isActive: boolean;
+  type: 'hero' | 'promo';
+}
+
+export interface Testimonial {
+  id: string;
+  name: string;
+  role?: string;
+  text: string;
+  rating?: number;
+  isActive: boolean;
+  createdAt?: string;
+}
+
+export interface HomepageSettings {
+  heroTitle?: string;
+  heroSubtitle?: string;
+  featuredTitle?: string;
+  featuredSubtitle?: string;
+  bestSellersTitle?: string;
+  bestSellersSubtitle?: string;
+  testimonialsTitle?: string;
+  showNewsletter?: boolean;
 }

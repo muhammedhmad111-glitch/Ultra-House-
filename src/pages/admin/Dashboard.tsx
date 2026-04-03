@@ -177,7 +177,7 @@ export default function AdminDashboard() {
         <div className="bg-white p-8 rounded-3xl border shadow-sm">
           <h3 className="text-lg font-bold mb-6">Revenue Growth</h3>
           <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart data={analytics.dailyReports}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
@@ -201,7 +201,7 @@ export default function AdminDashboard() {
         <div className="bg-white p-8 rounded-3xl border shadow-sm">
           <h3 className="text-lg font-bold mb-6">Best Selling Products</h3>
           <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart data={analytics.bestSellingProducts} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
                 <XAxis type="number" hide />

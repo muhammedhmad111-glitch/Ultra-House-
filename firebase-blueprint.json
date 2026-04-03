@@ -104,9 +104,39 @@
         "image": { "type": "string" },
         "link": { "type": "string" },
         "buttonText": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "type": { "type": "string", "enum": ["hero", "promo"] }
+      },
+      "required": ["id", "title", "image", "isActive", "type"]
+    },
+    "Testimonial": {
+      "title": "Testimonial",
+      "description": "Customer testimonials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "text": { "type": "string" },
+        "rating": { "type": "number" },
         "isActive": { "type": "boolean" }
       },
-      "required": ["id", "title", "image", "isActive"]
+      "required": ["id", "name", "text", "isActive"]
+    },
+    "HomepageSettings": {
+      "title": "Homepage Settings",
+      "description": "Configuration for homepage sections",
+      "type": "object",
+      "properties": {
+        "heroTitle": { "type": "string" },
+        "heroSubtitle": { "type": "string" },
+        "featuredTitle": { "type": "string" },
+        "featuredSubtitle": { "type": "string" },
+        "bestSellersTitle": { "type": "string" },
+        "bestSellersSubtitle": { "type": "string" },
+        "testimonialsTitle": { "type": "string" },
+        "showNewsletter": { "type": "boolean" }
+      }
     }
   },
   "firestore": {
@@ -137,6 +167,14 @@
     "/banners/{bannerId}": {
       "schema": "Banner",
       "description": "Homepage banners"
+    },
+    "/testimonials/{testimonialId}": {
+      "schema": "Testimonial",
+      "description": "Customer testimonials"
+    },
+    "/homepage_settings/{settingId}": {
+      "schema": "HomepageSettings",
+      "description": "Homepage configuration"
     }
   }
 }

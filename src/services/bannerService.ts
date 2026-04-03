@@ -4,12 +4,23 @@ import { Banner } from '../types';
 
 const COLLECTION_NAME = 'banners';
 
-export const getBanners = async (onlyActive = false) => {
+export const getBanners = async (onlyActive = false, type?: 'hero' | 'promo') => {
   try {
     let q = query(collection(db, COLLECTION_NAME));
+    const constraints = [];
+    
     if (onlyActive) {
-      q = query(collection(db, COLLECTION_NAME), where('isActive', '==', true));
+      constraints.push(where('isActive', '==', true));
     }
+    
+    if (type) {
+      constraints.push(where('type', '==', type));
+    }
+    
+    if (constraints.length > 0) {
+      q = query(collection(db, COLLECTION_NAME), ...constraints);
+    }
+    
     const querySnapshot = await getDocs(q);
     const banners: Banner[] = [];
     
@@ -71,7 +82,8 @@ export const seedBanners = async () => {
       image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop',
       link: '/products',
       buttonText: 'Shop Collection',
-      isActive: true
+      isActive: true,
+      type: 'hero' as const
     }
   ];
 

@@ -15,7 +15,8 @@ import {
   Search,
   Globe,
   Plus,
-  Layout
+  Layout,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../lib/utils';
@@ -39,7 +40,8 @@ export default function AdminLayout() {
     { name: 'Orders', icon: ShoppingBag, path: '/admin/orders' },
     { name: 'Products', icon: Package, path: '/admin/products' },
     { name: 'Categories', icon: Sparkles, path: '/admin/categories' },
-    { name: 'Banners', icon: Layout, path: '/admin/banners' },
+    { name: 'Homepage', icon: Layout, path: '/admin/homepage' },
+    { name: 'Banners', icon: ImageIcon, path: '/admin/banners' },
     { name: 'Customers', icon: Users, path: '/admin/customers' },
     { name: 'Reviews', icon: Bell, path: '/admin/reviews' },
     { name: 'Settings', icon: Settings, path: '/admin/settings' },

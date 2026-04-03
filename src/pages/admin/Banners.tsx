@@ -10,9 +10,12 @@ import {
   Image as ImageIcon,
   Layout,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { getBanners, addBanner, updateBanner, deleteBanner } from '../../services/bannerService';
+import { uploadFile } from '../../services/storageService';
 import { Banner } from '../../types';
 import Button from '../../components/ui/Button';
 import { toast } from 'sonner';
@@ -24,6 +27,7 @@ export default function AdminBanners() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Banner>>({
     title: '',
@@ -110,6 +114,26 @@ export default function AdminBanners() {
       fetchBanners();
     } catch (error) {
       toast.error("Failed to update banner status");
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file) return;
+    
+    setIsUploading(true);
+    try {
+      const bannerId = editingBanner?.id || 'new-banner';
+      const extension = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${extension}`;
+      const path = `banners/${bannerId}/${fileName}`;
+      const downloadURL = await uploadFile(file, path);
+      setFormData(prev => ({ ...prev, image: downloadURL }));
+      toast.success("Image uploaded successfully!");
+    } catch (error) {
+      toast.error("Failed to upload image");
+      console.error(error);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -252,14 +276,41 @@ export default function AdminBanners() {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Image URL</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.image}
-                    onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                    className="w-full px-5 py-4 bg-gray-50 rounded-2xl text-sm font-medium outline-none focus:ring-2 ring-black/5 border border-transparent focus:border-gray-200 transition-all"
-                    placeholder="https://..."
-                  />
+                  <div className="flex gap-3">
+                    <div className="flex-grow relative">
+                      <input
+                        type="text"
+                        required
+                        value={formData.image}
+                        onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
+                        className="w-full px-5 py-4 bg-gray-50 rounded-2xl text-sm font-medium outline-none focus:ring-2 ring-black/5 border border-transparent focus:border-gray-200 transition-all"
+                        placeholder="https://..."
+                      />
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        disabled={isUploading}
+                      />
+                      <button
+                        type="button"
+                        className={cn(
+                          "p-4 rounded-2xl transition-all border border-dashed",
+                          isUploading ? "bg-gray-100 text-gray-400" : "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                        )}
+                      >
+                        {isUploading ? (
+                          <Loader2 size={20} className="animate-spin" />
+                        ) : (
+                          <Upload size={20} />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-gray-400 px-2">Enter a URL or upload a file from your device.</p>
                   {formData.image && (
                     <div className="mt-2 aspect-video rounded-2xl overflow-hidden border">
                       <img src={formData.image} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />

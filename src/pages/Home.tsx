@@ -8,28 +8,46 @@ import { CATEGORIES } from '../data/sampleData';
 import { getProducts, seedProducts } from '../services/productService';
 import { getCategories, seedCategories } from '../services/categoryService';
 import { getBanners, seedBanners } from '../services/bannerService';
-import { Product, Category, Banner } from '../types';
+import { getTestimonials, seedTestimonials } from '../services/testimonialService';
+import { getHomepageSettings, seedHomepageSettings, HomepageSettings } from '../services/homepageService';
+import { Product, Category, Banner, Testimonial } from '../types';
 import { motion } from 'framer-motion';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const [heroBanners, setHeroBanners] = useState<Banner[]>([]);
+  const [promoBanners, setPromoBanners] = useState<Banner[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [settings, setSettings] = useState<HomepageSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [productData, categoryData, bannerData] = await Promise.all([
+        const [
+          productData, 
+          categoryData, 
+          heroData, 
+          promoData, 
+          testimonialData, 
+          settingsData
+        ] = await Promise.all([
           getProducts(),
           getCategories(),
-          getBanners(true) // Only active banners
+          getBanners(true, 'hero'),
+          getBanners(true, 'promo'),
+          getTestimonials(true),
+          getHomepageSettings()
         ]);
         
         let finalProducts = productData;
         let finalCategories = categoryData;
-        let finalBanners = bannerData;
+        let finalHeroBanners = heroData;
+        let finalPromoBanners = promoData;
+        let finalTestimonials = testimonialData;
+        let finalSettings = settingsData;
 
         // Seed products if empty
         if (productData.length === 0) {
@@ -44,14 +62,27 @@ export default function Home() {
         }
 
         // Seed banners if empty
-        if (bannerData.length === 0) {
+        if (heroData.length === 0) {
           await seedBanners();
-          finalBanners = await getBanners(true);
+          finalHeroBanners = await getBanners(true, 'hero');
+        }
+
+        if (testimonialData.length === 0) {
+          await seedTestimonials();
+          finalTestimonials = await getTestimonials(true);
+        }
+
+        if (!settingsData) {
+          await seedHomepageSettings();
+          finalSettings = await getHomepageSettings();
         }
 
         setProducts(finalProducts);
         setCategories(finalCategories);
-        setBanners(finalBanners);
+        setHeroBanners(finalHeroBanners);
+        setPromoBanners(finalPromoBanners);
+        setTestimonials(finalTestimonials);
+        setSettings(finalSettings);
       } catch (error) {
         console.error("Error fetching home data:", error);
       } finally {
@@ -70,7 +101,7 @@ export default function Home() {
       <section className="relative h-[85vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
-            src={banners[0]?.image || "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop"}
+            src={heroBanners[0]?.image || "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop"}
             alt="Hero Background"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
@@ -89,15 +120,15 @@ export default function Home() {
               New Collection 2026
             </span>
             <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6 leading-[1.1]">
-              {banners[0]?.title || "Elevate Your Home With Premium Style"}
+              {heroBanners[0]?.title || settings?.heroTitle || "Elevate Your Home With Premium Style"}
             </h1>
             <p className="text-lg md:text-xl text-gray-100 mb-8 max-w-lg leading-relaxed">
-              {banners[0]?.subtitle || "Discover our curated collection of minimalist furniture and decor designed to bring comfort and elegance to your space."}
+              {heroBanners[0]?.subtitle || settings?.heroSubtitle || "Discover our curated collection of minimalist furniture and decor designed to bring comfort and elegance to your space."}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link to={banners[0]?.link || "/products"}>
+            <div className="flex flex-col sm:grid-cols-2 gap-4">
+              <Link to={heroBanners[0]?.link || "/products"}>
                 <Button size="lg" className="w-full sm:w-auto">
-                  {banners[0]?.buttonText || "Shop Collection"}
+                  {heroBanners[0]?.buttonText || "Shop Collection"}
                   <ArrowRight className="ml-2" size={18} />
                 </Button>
               </Link>
@@ -198,8 +229,8 @@ export default function Home() {
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold tracking-tight mb-4">Featured Collection</h2>
-            <p className="text-gray-500">Our most exclusive pieces, handpicked for their exceptional design and craftsmanship.</p>
+            <h2 className="text-3xl font-bold tracking-tight mb-4">{settings?.featuredTitle || "Featured Collection"}</h2>
+            <p className="text-gray-500">{settings?.featuredSubtitle || "Our most exclusive pieces, handpicked for their exceptional design and craftsmanship."}</p>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -210,13 +241,40 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Promo Banner Section */}
+      {promoBanners.length > 0 && (
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="relative h-[400px] rounded-[2rem] overflow-hidden group">
+              <img 
+                src={promoBanners[0].image} 
+                alt={promoBanners[0].title}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center">
+                <div className="px-12 md:px-20 max-w-xl text-white">
+                  <h2 className="text-4xl font-bold mb-4">{promoBanners[0].title}</h2>
+                  <p className="text-lg text-gray-200 mb-8">{promoBanners[0].subtitle}</p>
+                  <Link to={promoBanners[0].link || "/products"}>
+                    <Button size="lg" className="bg-white text-black hover:bg-gray-200">
+                      {promoBanners[0].buttonText || "Shop Now"}
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Best Sellers */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex items-end justify-between mb-12">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight mb-2">Best Sellers</h2>
-              <p className="text-gray-500">The most loved products by our community.</p>
+              <h2 className="text-3xl font-bold tracking-tight mb-2">{settings?.bestSellersTitle || "Best Sellers"}</h2>
+              <p className="text-gray-500">{settings?.bestSellersSubtitle || "The most loved products by our community."}</p>
             </div>
             <Link to="/products" className="text-sm font-bold border-b-2 border-black pb-1 hover:text-gray-600 hover:border-gray-600 transition-all">
               Shop All
@@ -235,20 +293,16 @@ export default function Home() {
       <section className="py-20 bg-black text-white overflow-hidden">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight mb-4">What Our Customers Say</h2>
+            <h2 className="text-3xl font-bold tracking-tight mb-4">{settings?.testimonialsTitle || "What Our Customers Say"}</h2>
             <div className="flex justify-center gap-1 text-yellow-400">
               {[...Array(5)].map((_, i) => <Star key={i} fill="currentColor" size={20} />)}
             </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { name: 'Sarah J.', role: 'Interior Designer', text: 'UltraHouse has completely transformed my client projects. The quality of the furniture is unmatched at this price point.' },
-              { name: 'Ahmed M.', role: 'Home Owner', text: 'Fast delivery to Riyadh and the packaging was excellent. The minimalist sofa looks even better in person!' },
-              { name: 'Elena R.', role: 'Lifestyle Blogger', text: 'I love the curated selection. Every piece feels like it was chosen with care. Highly recommend their lighting collection.' }
-            ].map((testimonial, i) => (
+            {testimonials.map((testimonial, i) => (
               <motion.div 
-                key={i}
+                key={testimonial.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
@@ -266,28 +320,30 @@ export default function Home() {
       </section>
 
       {/* Newsletter / CTA */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="bg-gray-100 rounded-[2rem] p-12 md:p-20 text-center relative overflow-hidden">
-            <div className="relative z-10 max-w-2xl mx-auto">
-              <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">Join the UltraHouse Club</h2>
-              <p className="text-gray-500 mb-8">Subscribe to get exclusive early access to new collections and special offers.</p>
-              <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                <input 
-                  type="email" 
-                  placeholder="Enter your email" 
-                  className="flex-grow px-6 py-4 rounded-xl border-0 focus:ring-2 focus:ring-black outline-none"
-                  required
-                />
-                <Button size="lg">Subscribe</Button>
-              </form>
-              <p className="text-[10px] text-gray-400 mt-4 uppercase tracking-widest">
-                By subscribing, you agree to our Privacy Policy and Terms of Service.
-              </p>
+      {settings?.showNewsletter !== false && (
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="bg-gray-100 rounded-[2rem] p-12 md:p-20 text-center relative overflow-hidden">
+              <div className="relative z-10 max-w-2xl mx-auto">
+                <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">Join the UltraHouse Club</h2>
+                <p className="text-gray-500 mb-8">Subscribe to get exclusive early access to new collections and special offers.</p>
+                <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                  <input 
+                    type="email" 
+                    placeholder="Enter your email" 
+                    className="flex-grow px-6 py-4 rounded-xl border-0 focus:ring-2 focus:ring-black outline-none"
+                    required
+                  />
+                  <Button size="lg">Subscribe</Button>
+                </form>
+                <p className="text-[10px] text-gray-400 mt-4 uppercase tracking-widest">
+                  By subscribing, you agree to our Privacy Policy and Terms of Service.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </Layout>
   );
 }

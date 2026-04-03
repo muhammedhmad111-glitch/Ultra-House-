@@ -16,10 +16,13 @@ import {
   Tag,
   Package as PackageIcon,
   Eye,
-  MoreVertical
+  MoreVertical,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { getProducts, addProduct, updateProduct, deleteProduct } from '../../services/productService';
 import { generateProductDescription } from '../../services/geminiService';
+import { uploadProductImage } from '../../services/storageService';
 import { Product } from '../../types';
 import Button from '../../components/ui/Button';
 import { toast } from 'sonner';
@@ -34,6 +37,7 @@ export default function AdminProducts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
@@ -173,6 +177,24 @@ export default function AdminProducts() {
     const newImages = [...(formData.images || [])];
     newImages[index] = value;
     setFormData(prev => ({ ...prev, images: newImages }));
+  };
+
+  const handleFileUpload = async (index: number, file: File) => {
+    if (!file) return;
+    
+    setUploadingIndex(index);
+    try {
+      // Use a temporary ID if adding a new product
+      const productId = editingProduct?.id || 'new-product';
+      const downloadURL = await uploadProductImage(file, productId);
+      handleImageUrlChange(index, downloadURL);
+      toast.success("Image uploaded successfully!");
+    } catch (error) {
+      toast.error("Failed to upload image");
+      console.error(error);
+    } finally {
+      setUploadingIndex(null);
+    }
   };
 
   const filteredProducts = products.filter(p => 
@@ -524,31 +546,58 @@ export default function AdminProducts() {
                   </div>
                   <div className="space-y-4">
                     {formData.images?.map((url, index) => (
-                      <div key={index} className="flex gap-3">
-                        <div className="flex-grow relative">
-                          <input
-                            type="text"
-                            required
-                            value={url}
-                            onChange={(e) => handleImageUrlChange(index, e.target.value)}
-                            className="w-full px-5 py-4 bg-gray-50 rounded-2xl text-sm font-medium outline-none focus:ring-2 ring-black/5 border border-transparent focus:border-gray-200 transition-all"
-                            placeholder="Image URL (e.g. https://...)"
-                          />
-                          {url && (
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg overflow-hidden border shadow-sm">
-                              <img src={url} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                            </div>
+                      <div key={index} className="space-y-2">
+                        <div className="flex gap-3">
+                          <div className="flex-grow relative">
+                            <input
+                              type="text"
+                              required
+                              value={url}
+                              onChange={(e) => handleImageUrlChange(index, e.target.value)}
+                              className="w-full px-5 py-4 bg-gray-50 rounded-2xl text-sm font-medium outline-none focus:ring-2 ring-black/5 border border-transparent focus:border-gray-200 transition-all"
+                              placeholder="Image URL (e.g. https://...)"
+                            />
+                            {url && (
+                              <div className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg overflow-hidden border shadow-sm">
+                                <img src={url} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="relative">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => e.target.files?.[0] && handleFileUpload(index, e.target.files[0])}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              disabled={uploadingIndex === index}
+                            />
+                            <button
+                              type="button"
+                              className={cn(
+                                "p-4 rounded-2xl transition-all border border-dashed",
+                                uploadingIndex === index ? "bg-gray-100 text-gray-400" : "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                              )}
+                            >
+                              {uploadingIndex === index ? (
+                                <Loader2 size={20} className="animate-spin" />
+                              ) : (
+                                <Upload size={20} />
+                              )}
+                            </button>
+                          </div>
+
+                          {formData.images!.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImageUrl(index)}
+                              className="p-4 text-red-500 hover:bg-red-50 rounded-2xl transition-colors"
+                            >
+                              <X size={20} />
+                            </button>
                           )}
                         </div>
-                        {formData.images!.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImageUrl(index)}
-                            className="p-4 text-red-500 hover:bg-red-50 rounded-2xl transition-colors"
-                          >
-                            <X size={20} />
-                          </button>
-                        )}
+                        <p className="text-[10px] text-gray-400 px-2">Enter a URL or upload a file from your device.</p>
                       </div>
                     ))}
                   </div>
