@@ -91,7 +91,7 @@ export default function AdminLayout() {
           </button>
         </div>
 
-        <nav className="flex-grow px-4 space-y-2 mt-4">
+        <nav className="flex-grow px-4 space-y-2 mt-4 overflow-y-auto">
           {menuItems.map((item) => (
             <Link
               key={item.name}
@@ -207,7 +207,7 @@ export default function AdminLayout() {
                   <X size={24} />
                 </button>
               </div>
-              <nav className="flex-grow p-4 space-y-2">
+              <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
                 {menuItems.map((item) => (
                   <Link
                     key={item.name}
